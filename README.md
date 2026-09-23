@@ -156,6 +156,6 @@ whitespace, malformed input, and explicit text/numeric Serde representations.
 A GoML consumer test replays 4,601 reference cases across seven definition
 profiles. Expected results were captured from the real checksum-pinned Rust
 bitflags 2.13.2 implementation using `oracle.rs`; ordinary tests need neither
-Rust nor a network download. See [fixture provenance](../consumers/bitflags/tests/data/README.md).
+Rust nor a network download. See [fixture provenance](../../goml-dev/ecosystem/consumers/bitflags/tests/data/README.md).
 Nineteen compile-fail cases run through GoML `std::process` in temporary downstream
 projects, checking both nonzero exits and precise diagnostic text.
