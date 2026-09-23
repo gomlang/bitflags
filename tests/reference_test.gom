@@ -1,0 +1,30 @@
+package tests;
+
+use ecosystem::verification::reference;
+use consumer::bitflags as app;
+use std::fs;
+use std::json;
+use std::testing;
+
+#[test]
+fn rust_bitflags_reference_profiles() -> () {
+    let data = reference::load_text("tests/data/reference.jsonl");
+    let mut count = 0;
+    for line in data.split("\n") {
+        if line == "" {
+            continue;
+        }
+        let case = testing::expect_ok(json::parse(line), "fixture JSON");
+        let request = testing::expect_some(
+            json::as_string(testing::expect_some(json::field(case, "request"), "request")),
+            "input",
+        );
+        let expected = testing::expect_some(
+            json::as_string(testing::expect_some(json::field(case, "expected"), "expected")),
+            "expected text",
+        );
+        testing::assert_eq(app::oracle_line(request), expected);
+        count += 1;
+    }
+    testing::assert_eq(count, 4601);
+}
