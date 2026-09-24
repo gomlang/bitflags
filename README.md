@@ -144,7 +144,7 @@ metadata. The derive enforces these conditions and emits constant mask methods.
 ## Verification
 
 ```sh
-just ecosystem-test bitflags
+(cd ../verification && just ecosystem-test bitflags)
 ```
 
 This runs public API tests, a separate versioned consumer, fresh/cached build
@@ -156,6 +156,6 @@ whitespace, malformed input, and explicit text/numeric Serde representations.
 A GoML consumer test replays 4,601 reference cases across seven definition
 profiles. Expected results were captured from the real checksum-pinned Rust
 bitflags 2.13.2 implementation using `oracle.rs`; ordinary tests need neither
-Rust nor a network download. See [fixture provenance](../../goml-dev/ecosystem/consumers/bitflags/tests/data/README.md).
+Rust nor a network download. See [fixture provenance](consumer/tests/data/README.md).
 Nineteen compile-fail cases run through GoML `std::process` in temporary downstream
 projects, checking both nonzero exits and precise diagnostic text.
