@@ -142,6 +142,20 @@ pub trait Flags {
     fn iter(self: Self) -> Iter[Self] {
         Iter { names: self.iter_names(), finished: Ref::new(false) }
     }
+    fn iter_bits(self: Self) -> FnIterator[Self] {
+        let remaining = Ref::new(self.bits());
+        FnIterator::from_fn(
+            || {
+                let bits = remaining.get();
+                if bits == 0 {
+                    return Option::None
+                }
+                let lowest = bits & (~bits + 1);
+                remaining.set(bits & (bits - 1));
+                Option::Some(Flags::from_bits_retain(lowest))
+            },
+        )
+    }
     fn iter_defined_names() -> FnIterator[(string, Self)] {
         let empty: Self = Flags::empty();
         defined_names(empty)

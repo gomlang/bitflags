@@ -100,6 +100,14 @@ last value; `bitflags::collect(iterator)` reconstructs the original bit pattern.
 Both iterators are fused. Copies share the current cursor and should be consumed
 serially; creating another iterator starts a fresh traversal.
 
+`iter_bits()` returns a `FnIterator[Self]` containing each set bit as a one-bit
+flag value, in ascending bit position. It includes known unnamed bits, unknown
+bits, and partial composite flags; aliases do not duplicate bits. Zero yields
+no values. Signed storage uses its normalized unsigned pattern, including the
+highest storage bit. The iterator is fused and uses constant storage and one
+step per set bit, without enumerating definitions. Copies share their cursor;
+`bitflags::collect(value.iter_bits())` reconstructs the entire value.
+
 `Type::iter_defined_names()` includes every named definition, including aliases
 and zero. `iter_equal_names()` includes every name whose mask exactly equals the
 value. Both return ordinary `FnIterator` values.
