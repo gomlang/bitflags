@@ -48,7 +48,7 @@ fn rejected_derive_inputs_report_precise_diagnostics() -> () {
             + declaration;
         testing::assert_ok(
             fs::write_file_structured(
-                path::join(directory, "main.gom"),
+                path::join(directory, "main.goml"),
                 "package main;\nuse ecosystem::bitflags;\n" + declaration + "\nfn main() -> () {}\n",
             ),
         );
