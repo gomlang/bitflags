@@ -1,0 +1,60 @@
+package tests;
+
+use ecosystem::bitflags;
+use bitflags::Flags;
+use std::testing;
+
+#[derive(Flags)]
+#[flags(NONE = "0", GROUP = "3", ALIAS = "3", unnamed = "0x40")]
+struct BitParts {
+    bits: u8,
+}
+
+#[derive(Flags)]
+#[flags(HIGH = "0x8000000000000000")]
+struct SignedBitParts {
+    bits: i64,
+}
+
+#[test]
+fn individual_bit_iteration_is_complete_ordered_and_fused() -> () {
+    for raw in 0..256 {
+        let value = BitParts::from_bits_retain(raw.to_u64());
+        let parts = value.iter_bits();
+        let mut previous: u64 = 0;
+        let mut combined: u64 = 0;
+        let mut count = 0;
+        while let Some(part) = parts.next() {
+            let bit = part.bits();
+            testing::assert(bit > previous);
+            testing::assert_eq(bit & (bit - 1), 0);
+            testing::assert_eq(bit & raw.to_u64(), bit);
+            combined |= bit;
+            previous = bit;
+            count += 1;
+        }
+        testing::assert(count <= 8);
+        testing::assert_eq(combined, raw.to_u64());
+        testing::assert_none(parts.next());
+        testing::assert_none(parts.next());
+        testing::assert_eq(bitflags::collect(value.iter_bits()).bits(), raw.to_u64());
+    }
+}
+
+#[test]
+fn bit_iteration_handles_signed_high_bits_and_shared_cursors() -> () {
+    let value = SignedBitParts::from_bits_retain(0x8000000000000001);
+    let iterator = value.iter_bits();
+    let alias = iterator;
+    testing::assert_eq(testing::expect_some(iterator.next(), "low bit").bits(), 1);
+    testing::assert_eq(testing::expect_some(alias.next(), "sign bit").bits(), 0x8000000000000000);
+    testing::assert_none(iterator.next());
+    testing::assert_eq(bitflags::collect(value.iter_bits()).bits(), value.bits());
+    let full = SignedBitParts::from_bits_retain(0xffffffffffffffff);
+    let mut count = 0;
+    for bit in full.iter_bits() {
+        testing::assert_eq(bit.bits() & (bit.bits() - 1), 0);
+        count += 1;
+    }
+    testing::assert_eq(count, 64);
+}

@@ -1,0 +1,22 @@
+package tests;
+
+use ecosystem::bitflags;
+use bitflags::Flags;
+use std::testing;
+
+#[derive(Flags)]
+#[flags(PAIR = "3", unnamed = "0x40")]
+struct DownstreamBits {
+    bits: i8,
+}
+
+#[test]
+fn downstream_default_bit_iterator_preserves_unnamed_unknown_and_partial_bits() -> () {
+    let value = DownstreamBits::from_bits_retain(0xc1);
+    let iterator = value.iter_bits();
+    testing::assert_eq(testing::expect_some(iterator.next(), "partial pair").bits(), 1);
+    testing::assert_eq(testing::expect_some(iterator.next(), "unnamed bit").bits(), 64);
+    testing::assert_eq(testing::expect_some(iterator.next(), "unknown sign bit").bits(), 128);
+    testing::assert_none(iterator.next());
+    testing::assert_eq(bitflags::collect(value.iter_bits()).bits(), value.bits());
+}
