@@ -1,7 +1,7 @@
 package tests;
 
 use ecosystem::verification::reference;
-use consumer::bitflags as app;
+use ecosystem::bitflags::examples::basic as app;
 use std::fs;
 use std::json;
 use std::testing;

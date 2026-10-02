@@ -147,15 +147,27 @@ metadata. The derive enforces these conditions and emits constant mask methods.
 (cd ../verification && just ecosystem-test bitflags)
 ```
 
-This runs public API tests, a separate versioned consumer, fresh/cached build
+This runs public API tests, the example and its independent downstream verification, fresh/cached build
 checks, Rust reference comparisons, and compile-time diagnostic checks. Tests
 cover all 65,536 pairs of 8-bit operands, iterator reconstruction, aliases,
 overlaps, empty and unnamed definitions, signed/full-width storage, Unicode
 whitespace, malformed input, and explicit text/numeric Serde representations.
 
-A GoML consumer test replays 4,601 reference cases across seven definition
+A GoML example test replays 4,601 reference cases across seven definition
 profiles. Expected results were captured from the real checksum-pinned Rust
 bitflags 2.13.2 implementation using `oracle.rs`; ordinary tests need neither
-Rust nor a network download. See [fixture provenance](consumer/tests/data/README.md).
+Rust nor a network download. See [fixture provenance](examples/basic/tests/data/README.md).
 Nineteen compile-fail cases run through GoML `std::process` in temporary downstream
 projects, checking both nonzero exits and precise diagnostic text.
+
+## Development and examples
+
+Requires GoML 0.1.55 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+
+```sh
+goml run --example basic
+goml test
+goml verify --timeout 300s
+```
+
+`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test bitflags)` also retains the library-specific smoke and compatibility checks.

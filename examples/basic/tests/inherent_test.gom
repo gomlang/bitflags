@@ -1,6 +1,6 @@
 package tests;
 
-use consumer::bitflags as application;
+use ecosystem::bitflags::examples::basic as application;
 use ecosystem::bitflags as flags;
 use std::testing;
 
