@@ -29,7 +29,9 @@ fn rejected_derive_inputs_report_precise_diagnostics() -> () {
     defer {
         testing::assert_ok(fs::remove_dir_all(directory));
     };
-    let manifest = "[module]\npath=\"diagnostics::bitflags\"\n[dependencies]\n\"ecosystem::bitflags\"=\"0.1.0\"\n";
+    let manifest = "[module]\npath=\"diagnostics::bitflags\"\n[dependencies]\n\"ecosystem::bitflags\"={path="
+        + testing::expect_ok(json::try_to_string(module_root), "library path")
+        + "}\n";
     testing::assert_ok(fs::write_file_structured(path::join(directory, "goml.toml"), manifest));
     let mut count = 0;
     for line in source.split("\n") {
@@ -72,5 +74,5 @@ fn rejected_derive_inputs_report_precise_diagnostics() -> () {
         }
         count += 1;
     }
-    testing::assert_eq(count, 19);
+    testing::assert_eq(count, 23);
 }

@@ -1,0 +1,17 @@
+package tests;
+
+use ecosystem::bitflags;
+use bitflags::Flags;
+use std::testing;
+
+#[derive(Flags, bitflags::FlagValues)]
+#[flags(FIRST = "1", B0 = "FIRST | FIRST", B1 = "B0 | B0", B2 = "B1 | B1", B3 = "B2 | B2", B4 = "B3 | B3", B5 = "B4 | B4", B6 = "B5 | B5", B7 = "B6 | B6", B8 = "B7 | B7", B9 = "B8 | B8", B10 = "B9 | B9", B11 = "B10 | B10", B12 = "B11 | B11", B13 = "B12 | B12", B14 = "B13 | B13", B15 = "B14 | B14", B16 = "B15 | B15", B17 = "B16 | B16", B18 = "B17 | B17", B19 = "B18 | B18")]
+struct PublishedMasks {
+    bits: u8,
+}
+
+#[test]
+fn downstream_derive_reuses_prior_mask_values() -> () {
+    testing::assert_eq(PublishedMasks::flag_b19().bits(), 1);
+    testing::assert_eq(PublishedMasks::all().bits(), 1);
+}

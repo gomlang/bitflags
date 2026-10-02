@@ -17,3 +17,7 @@
 ["#[flags(READ=\"1\", read=\"2\")] struct Bad { value: u8 }","accessor collision: flag_read","FlagValues"]
 ["#[flags(READ=\"256\")] struct Bad { value: u8 }","out-of-range flag mask","FlagValues"]
 ["#[flags(READ=\"1\")] struct Bad[T] { value: T }","non-generic struct","FlagValues"]
+["#[flags(A=\"A\")] struct Bad { value: u8 }", "out-of-range flag mask", "Flags"]
+["#[flags(A=\"B\", B=\"A\")] struct Bad { value: u8 }", "out-of-range flag mask", "Flags"]
+["#[flags(A=\"A\")] struct Bad { value: u8 }", "out-of-range flag mask", "FlagValues"]
+["#[flags(A=\"B\", B=\"1\")] struct Bad { value: u8 }", "out-of-range flag mask", "FlagValues"]
