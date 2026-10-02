@@ -43,7 +43,11 @@ decimal, `0x` hexadecimal, `0b` binary, `0o` octal, `~0` for all storage bits, a
 `|` combinations of those values or previously declared flag names. Forward
 references, empty components, overflow, duplicate names, and invalid storage
 types are compile-time diagnostics. Up to 256 declarations are accepted, subject
-to the compiler's existing derive evaluation budget.
+to the compiler's existing derive evaluation budget. Earlier masks are evaluated
+once per validation/emission pass and referenced from a bounded 256-entry
+cache (at most 5,120 bytes of fixed-width decimal values). Repeated aliases and diamond-shaped references therefore do not
+recursively expand prior expressions; lookup remains quadratic in declaration
+count in the worst case.
 
 The reserved argument `unnamed = "mask"` expands the set of known bits without
 creating a name. It may occur more than once. Different names may have identical
@@ -165,7 +169,7 @@ A GoML example test replays 4,601 reference cases across seven definition
 profiles. Expected results were captured from the real checksum-pinned Rust
 bitflags 2.13.2 implementation using `oracle.rs`; ordinary tests need neither
 Rust nor a network download. See [fixture provenance](examples/basic/tests/data/README.md).
-Nineteen compile-fail cases run through GoML `std::process` in temporary downstream
+Twenty-three compile-fail cases run through GoML `std::process` in temporary downstream
 projects, checking both nonzero exits and precise diagnostic text.
 
 ## Development and examples

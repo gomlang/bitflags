@@ -28,7 +28,16 @@ fn storage_width(name: string) -> isize {
 }
 
 #[comptime_derive]
-fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64) -> u64 {
+fn cached_mask(bits: u64) -> string {
+    let mut text = bits.to_string();
+    while text.byte_len() < 20 {
+        text = "0" + text;
+    }
+    text
+}
+
+#[comptime_derive]
+fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64, values: string) -> u64 {
     let text = meta_attribute_argument_text(attribute, index);
     let mut bits: u64 = 0;
     let mut start = 0;
@@ -54,7 +63,7 @@ fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64) -> u64 {
         } else {
             for previous in 0..index {
                 if part != "unnamed" && meta_attribute_argument_name(attribute, previous) == part {
-                    found = Option::Some(declaration_value(attribute, previous, mask));
+                    found = number(values.byte_slice(previous * 20, (previous + 1) * 20), 10, mask);
                 }
             }
         }
@@ -118,6 +127,7 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
         compile_error("Flags supports at most 256 declarations")
     }
     let definitions = meta_expr_list_new();
+    let mut values = "";
     let mut known: u64 = 0;
     let mut named: u64 = 0;
     for index in 0..count {
@@ -134,7 +144,8 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
                 compile_error("duplicate flag name: " + name)
             }
         }
-        let bits = declaration_value(attribute, index, mask);
+        let bits = declaration_value(attribute, index, mask, values);
+        values += cached_mask(bits);
         known |= bits;
         if name != "unnamed" {
             named |= bits;

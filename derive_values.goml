@@ -34,7 +34,10 @@ pub fn derive_flag_values(input: DeriveInput) -> DeriveOutput {
         if meta_attribute_name(attribute) != "flags" {
             continue;
         }
+        let mut values = "";
         for index in 0..meta_attribute_argument_count(attribute) {
+            let bits = declaration_value(attribute, index, mask, values);
+            values += cached_mask(bits);
             let name = meta_attribute_argument_name(attribute, index);
             if name == "unnamed" {
                 continue;
@@ -46,7 +49,7 @@ pub fn derive_flag_values(input: DeriveInput) -> DeriveOutput {
                     compile_error("FlagValues accessor collision: " + method_name)
                 }
             }
-            let bits = mask_expr(declaration_value(attribute, index, mask));
+            let bits = mask_expr(bits);
             let value = if storage == "u64" {
                 bits
             } else {
