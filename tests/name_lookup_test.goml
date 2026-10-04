@@ -1,0 +1,54 @@
+package tests;
+
+use ecosystem::bitflags;
+use bitflags::Flags;
+use std::testing;
+
+#[derive(Flags)]
+#[flags(NONE = "0", HIGH = "0x80", ALIAS = "HIGH", MIX = "HIGH | 1", lower = "2", LOWER = "4", unnamed = "8", unnamed = "16")]
+struct NamedBoundary {
+    raw: i8,
+}
+
+#[derive(Flags)]
+#[flags(unnamed = "1", unnamed = "2")]
+struct NoNames {
+    raw: u64,
+}
+
+#[test]
+fn named_lookup_preserves_zero_aliases_case_and_signed_masks() -> () {
+    let cases: Vec[(string, u64)] = Vec::from_array(
+        [("NONE", 0), ("HIGH", 128), ("ALIAS", 128), ("MIX", 129), ("lower", 2), ("LOWER", 4)],
+    );
+    for (name, bits) in cases {
+        let value = testing::expect_some(NamedBoundary::from_name(name), "named lookup");
+        testing::assert_eq(value.bits(), bits);
+        for mode in Vec::from_array(
+            [
+                bitflags::ParseMode::Retain,
+                bitflags::ParseMode::Truncate,
+                bitflags::ParseMode::Strict,
+                bitflags::ParseMode::Checked,
+            ],
+        ) {
+            let parsed: NamedBoundary = testing::expect_ok(
+                bitflags::parse_with(" " + name + " | NONE ", mode),
+                "named parse",
+            );
+            testing::assert_eq(parsed.bits(), bits);
+        }
+    }
+    for name in Vec::from_array(["", "unnamed", "high", "HIGH ", " HIGH", "HÍGH", "missing"]) {
+        testing::assert_none(NamedBoundary::from_name(name));
+    }
+}
+
+#[test]
+fn unnamed_only_definitions_do_not_create_lookup_names() -> () {
+    testing::assert_eq(NoNames::all().bits(), 3);
+    for name in Vec::from_array(["", "unnamed", "ALL", "NONE"]) {
+        testing::assert_none(NoNames::from_name(name));
+        testing::assert_none(Empty::from_name(name));
+    }
+}

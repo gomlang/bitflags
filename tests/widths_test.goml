@@ -56,6 +56,8 @@ struct Byte {
 
 fn width[F: bitflags::Flags](sample: F, bytes: isize, maximum: u64) -> () {
     testing::assert_eq(sample.storage_mask(), maximum);
+    let named: Option[F] = Flags::from_name("ALL");
+    testing::assert_eq(testing::expect_some(named, "named integer width").bits(), maximum);
     let value: F = Flags::from_bits_retain(maximum);
     testing::assert_eq(value.bits(), maximum);
     let encoded = testing::expect_ok(

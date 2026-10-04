@@ -46,14 +46,18 @@ types are compile-time diagnostics. Up to 256 declarations are accepted, subject
 to the compiler's existing derive evaluation budget. Earlier masks are evaluated
 once per validation/emission pass and referenced from a bounded 256-entry
 cache (at most 5,120 bytes of fixed-width decimal values). Repeated aliases and diamond-shaped references therefore do not
-recursively expand prior expressions; lookup remains quadratic in declaration
-count in the worst case.
+recursively expand prior expressions; compile-time reference resolution remains
+quadratic in declaration count in the worst case.
 
 The reserved argument `unnamed = "mask"` expands the set of known bits without
 creating a name. It may occur more than once. Different names may have identical
 masks. Zero and multi-bit flags are supported. `unnamed` replaces the Rust macro's
 `const _` spelling; the GoML attribute metadata does not represent `_` as a named
 argument. Flag names are case-sensitive.
+
+For derived types, `from_name` uses generated name matching without building a
+definitions vector; text parsing reuses that lookup. Manual `Flags`
+implementations retain the metadata-based default.
 
 `Flags` supplies the trait implementation. The optional `FlagValues` derive uses
 GoML 0.1.50 inherent output to generate public static constructors for named flags:

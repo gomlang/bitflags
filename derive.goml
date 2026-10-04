@@ -126,6 +126,14 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
     if count > 256 {
         compile_error("Flags supports at most 256 declarations")
     }
+    let lookup = meta_arm_list_new();
+    let field = derive_field_name(input, 0);
+    let conversion = "to_"
+        + if meta_type_name(storage) == "byte" {
+            "u8"
+        } else {
+            meta_type_name(storage)
+        };
     let definitions = meta_expr_list_new();
     let mut values = "";
     let mut known: u64 = 0;
@@ -149,6 +157,26 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
         known |= bits;
         if name != "unnamed" {
             named |= bits;
+            let fields = meta_expr_field_list_new();
+            meta_expr_field_list_push(
+                fields,
+                field,
+                if meta_type_name(storage) == "u64" {
+                    mask_expr(bits)
+                } else {
+                    meta_expr_method_call(mask_expr(bits), conversion, meta_expr_list_new())
+                },
+            );
+            meta_arm_list_push(
+                lookup,
+                meta_arm(
+                    meta_pattern_string(name),
+                    meta_expr_constructor(
+                        "Option::Some",
+                        one_expr(meta_expr_target_struct(input, fields)),
+                    ),
+                ),
+            );
         }
         let arguments = one_expr(
             meta_expr_string(
@@ -163,7 +191,21 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
         meta_expr_list_push(definitions, meta_expr_call(input, "Flag::new", arguments));
     }
     let output = derive_output_new(input, "Flags");
-    let field = derive_field_name(input, 0);
+    meta_arm_list_push(
+        lookup,
+        meta_arm(meta_pattern_wild(), meta_expr_constructor("Option::None", meta_expr_list_new())),
+    );
+    let lookup_parameters = meta_param_list_new();
+    meta_param_list_push(lookup_parameters, "name", meta_type_call_site("string"));
+    derive_output_add_method(
+        output,
+        meta_method(
+            "from_name",
+            lookup_parameters,
+            meta_type_apply(meta_type_call_site("Option"), one_type(derive_target_type(input))),
+            meta_expr_match(meta_expr_var("name"), lookup),
+        ),
+    );
     let stored = meta_expr_field(meta_expr_var("self"), field);
     let widened = if meta_type_name(storage) == "u64" {
         stored
@@ -182,12 +224,6 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
     let parameters = meta_param_list_new();
     meta_param_list_push(parameters, "bits", meta_type_call_site("u64"));
     let fields = meta_expr_field_list_new();
-    let conversion = "to_"
-        + if meta_type_name(storage) == "byte" {
-            "u8"
-        } else {
-            meta_type_name(storage)
-        };
     meta_expr_field_list_push(
         fields,
         field,
