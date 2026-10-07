@@ -2,7 +2,8 @@
 
 Typed integer flag sets in GoML, modeled on
 [Rust bitflags 2.13.2](https://docs.rs/bitflags/2.13.2/bitflags/). The library is
-implemented entirely in GoML and uses an ordinary third-party derive handler.
+implemented entirely in GoML and uses ordinary third-party derive handlers.
+GoML 0.1.59 or newer is required.
 Each flags type remains a distinct user-defined struct with its original integer
 storage; it is not a string-keyed map or a shared mutable handle.
 
@@ -10,7 +11,7 @@ storage; it is not a string-keyed map or a shared mutable handle.
 use ecosystem::bitflags;
 use bitflags::Flags;
 
-#[derive(Flags, bitflags::FlagValues, PartialEq, Eq, Hash, Default)]
+#[derive(bitflags::FlagSet, PartialEq, Eq, Hash, Default)]
 #[flags(NONE = "0", READ = "0b1", WRITE = "0b10", READ_WRITE = "READ | WRITE", unnamed = "0x80")]
 pub struct Permissions {
     bits: u8,
@@ -42,10 +43,12 @@ named argument is a flag name and a string mask expression. Expressions support
 decimal, `0x` hexadecimal, `0b` binary, `0o` octal, `~0` for all storage bits, and
 `|` combinations of those values or previously declared flag names. Forward
 references, empty components, overflow, duplicate names, and invalid storage
-types are compile-time diagnostics. Up to 256 declarations are accepted, subject
+types are compile-time diagnostics. Invalid declarations and mask components point to
+their attribute argument. Up to 256 declarations are accepted, subject
 to the compiler's existing derive evaluation budget. Earlier masks are evaluated
 once per validation/emission pass and referenced from a bounded 256-entry
-cache (at most 5,120 bytes of fixed-width decimal values). Repeated aliases and diamond-shaped references therefore do not
+compile-time `Vec[u64]` cache. Mask references read cached integers directly without
+decimal serialization. Repeated aliases and diamond-shaped references therefore do not
 recursively expand prior expressions; compile-time reference resolution remains
 quadratic in declaration count in the worst case.
 
@@ -59,8 +62,13 @@ For derived types, `from_name` uses generated name matching without building a
 definitions vector; text parsing reuses that lookup. Manual `Flags`
 implementations retain the metadata-based default.
 
-`Flags` supplies the trait implementation. The optional `FlagValues` derive uses
-GoML 0.1.50 inherent output to generate public static constructors for named flags:
+`FlagSet` emits both the `Flags` implementation and an inherent implementation with
+public static constructors in one derive. Do not combine `FlagSet` with `Flags` or
+`FlagValues` on the same type.
+
+The existing separate derives remain supported: `Flags` supplies the trait
+implementation, and optional `FlagValues` generates public static constructors for named
+flags:
 `READ` becomes `Permissions::flag_read()` and `READ_WRITE` becomes
 `Permissions::flag_read_write()`. These methods work across package interfaces
 without importing the `Flags` trait. They preserve zero, aliases, composite masks
@@ -72,7 +80,7 @@ Non-ASCII names and names that collide after this conversion, such as `READ` and
 `FlagValues` validates the same declaration rules as `Flags` and can also be used
 alone for constructors. Both derives can be combined with equality/hash/default
 derives. Existing module constants and `Permissions::from_name` remain available;
-associated constants and overloaded bitwise operators are still unsupported.
+public associated flag constants and overloaded bitwise operators are not generated.
 Import `Flags` in each file using the trait methods below.
 
 ## Bit operations
@@ -178,7 +186,7 @@ projects, checking both nonzero exits and precise diagnostic text.
 
 ## Development and examples
 
-Requires GoML 0.1.56 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires GoML 0.1.59 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic

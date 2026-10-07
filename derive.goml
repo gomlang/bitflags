@@ -28,16 +28,13 @@ fn storage_width(name: string) -> isize {
 }
 
 #[comptime_derive]
-fn cached_mask(bits: u64) -> string {
-    let mut text = bits.to_string();
-    while text.byte_len() < 20 {
-        text = "0" + text;
-    }
-    text
-}
-
-#[comptime_derive]
-fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64, values: string) -> u64 {
+fn declaration_value(
+    attribute: MetaAttribute,
+    index: isize,
+    mask: u64,
+    values: Vec[u64],
+    names: Vec[string],
+) -> u64 {
     let text = meta_attribute_argument_text(attribute, index);
     let mut bits: u64 = 0;
     let mut start = 0;
@@ -47,7 +44,7 @@ fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64, values: 
         }
         let part = strip_ascii(text.byte_slice(start, end));
         if part == "" {
-            compile_error("empty flag mask component")
+            let _ = derive_error_at_argument(attribute, index, "empty flag mask component");
         }
         let mut found = Option::None;
         if part == "~0" {
@@ -62,8 +59,8 @@ fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64, values: 
             found = number(part, 10, mask);
         } else {
             for previous in 0..index {
-                if part != "unnamed" && meta_attribute_argument_name(attribute, previous) == part {
-                    found = number(values.byte_slice(previous * 20, (previous + 1) * 20), 10, mask);
+                if part != "unnamed" && names.get(previous) == part {
+                    found = Option::Some(values.get(previous));
                 }
             }
         }
@@ -71,7 +68,13 @@ fn declaration_value(attribute: MetaAttribute, index: isize, mask: u64, values: 
             Some(value) => {
                 bits |= value;
             },
-            None => compile_error("invalid or out-of-range flag mask component: " + part),
+            None => {
+                let _ = derive_error_at_argument(
+                    attribute,
+                    index,
+                    "invalid or out-of-range flag mask component: " + part,
+                );
+            },
         }
         start = end + 1;
     }
@@ -135,25 +138,31 @@ pub fn derive_flags(input: DeriveInput) -> DeriveOutput {
             meta_type_name(storage)
         };
     let definitions = meta_expr_list_new();
-    let mut values = "";
+    let values: Vec[u64] = Vec::new();
+    let names: Vec[string] = Vec::new();
     let mut known: u64 = 0;
     let mut named: u64 = 0;
     for index in 0..count {
         if meta_attribute_argument_kind(attribute, index) != "named"
             || meta_attribute_argument_value_kind(attribute, index) != "string" {
-            compile_error("flags declarations require NAME = \"mask\"")
+            let _ = derive_error_at_argument(
+                attribute,
+                index,
+                "flags declarations require NAME = \"mask\"",
+            );
         }
         let name = meta_attribute_argument_name(attribute, index);
         if name.starts_with("0x") {
-            compile_error("flag names cannot start with 0x")
+            let _ = derive_error_at_argument(attribute, index, "flag names cannot start with 0x");
         }
         for previous in 0..index {
-            if name != "unnamed" && name == meta_attribute_argument_name(attribute, previous) {
-                compile_error("duplicate flag name: " + name)
+            if name != "unnamed" && name == names.get(previous) {
+                let _ = derive_error_at_argument(attribute, index, "duplicate flag name: " + name);
             }
         }
-        let bits = declaration_value(attribute, index, mask, values);
-        values += cached_mask(bits);
+        let bits = declaration_value(attribute, index, mask, values, names);
+        values.push(bits);
+        names.push(name);
         known |= bits;
         if name != "unnamed" {
             named |= bits;

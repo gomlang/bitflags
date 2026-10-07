@@ -1,0 +1,22 @@
+package tests;
+
+use ecosystem::bitflags;
+use bitflags::Flags;
+use std::testing;
+
+#[derive(bitflags::FlagSet, PartialEq, Debug)]
+#[flags(NONE = "0", READ = "1", WRITE = "2", BOTH = "READ | WRITE", ALIAS = "BOTH", unnamed = "0x80")]
+struct CombinedFlags {
+    bits: u8,
+}
+
+#[test]
+fn combined_derive_provides_trait_methods_and_inherent_values() -> () {
+    let both = CombinedFlags::flag_read().union(CombinedFlags::flag_write());
+    testing::assert_eq(both.bits(), 3.to_u64());
+    testing::assert_eq(CombinedFlags::flag_both(), both);
+    testing::assert_eq(CombinedFlags::flag_alias(), both);
+    testing::assert_eq(CombinedFlags::flag_none().bits(), 0.to_u64());
+    testing::assert_eq(both.known_mask(), 131.to_u64());
+    testing::assert_eq(both.named_mask(), 3.to_u64());
+}

@@ -21,6 +21,11 @@ fn flag_method_name(name: string) -> string {
 #[comptime_derive(FlagValues)]
 pub fn derive_flag_values(input: DeriveInput) -> DeriveOutput {
     let _ = derive_flags(input);
+    flag_values_output(input)
+}
+
+#[comptime_derive]
+fn flag_values_output(input: DeriveInput) -> DeriveOutput {
     let storage = meta_type_name(derive_field_type(input, 0));
     let width = storage_width(storage);
     let mask: u64 = if width == 64 {
@@ -34,19 +39,25 @@ pub fn derive_flag_values(input: DeriveInput) -> DeriveOutput {
         if meta_attribute_name(attribute) != "flags" {
             continue;
         }
-        let mut values = "";
+        let values: Vec[u64] = Vec::new();
+        let names: Vec[string] = Vec::new();
         for index in 0..meta_attribute_argument_count(attribute) {
-            let bits = declaration_value(attribute, index, mask, values);
-            values += cached_mask(bits);
+            let bits = declaration_value(attribute, index, mask, values, names);
+            values.push(bits);
             let name = meta_attribute_argument_name(attribute, index);
+            names.push(name);
             if name == "unnamed" {
                 continue;
             }
             let method_name = flag_method_name(name);
             for previous in 0..index {
-                let previous_name = meta_attribute_argument_name(attribute, previous);
+                let previous_name = names.get(previous);
                 if previous_name != "unnamed" && flag_method_name(previous_name) == method_name {
-                    compile_error("FlagValues accessor collision: " + method_name)
+                    let _ = derive_error_at_argument(
+                        attribute,
+                        index,
+                        "FlagValues accessor collision: " + method_name,
+                    );
                 }
             }
             let bits = mask_expr(bits);
@@ -77,5 +88,12 @@ pub fn derive_flag_values(input: DeriveInput) -> DeriveOutput {
             );
         }
     }
+    output
+}
+
+#[comptime_derive(FlagSet)]
+pub fn derive_flag_set(input: DeriveInput) -> DeriveOutput {
+    let output = derive_flags(input);
+    derive_output_merge(output, flag_values_output(input));
     output
 }
