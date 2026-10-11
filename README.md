@@ -190,8 +190,8 @@ Requires the [current GoML toolchain](https://github.com/gomlang/verification/bl
 
 ```sh
 goml run --example basic
-goml test
+goml test --timeout 300s
 (cd ../verification && just ecosystem-test bitflags)
 ```
 
-`goml test` builds the example and runs its tests. `(cd ../verification && just ecosystem-test bitflags)` runs the library-specific smoke and compatibility checks.
+`goml test --timeout 300s` builds the example and runs its tests. `(cd ../verification && just ecosystem-test bitflags)` runs the library-specific smoke and compatibility checks.

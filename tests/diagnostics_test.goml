@@ -15,11 +15,16 @@ fn rejected_derive_inputs_report_precise_diagnostics() -> () {
     let module_root = testing::expect_ok(env::current_dir_structured(), "module directory");
     let driver = match env::var_structured("GOML_VERIFY_DRIVER") {
         Result::Ok(value) => value,
-        Result::Err(_) => testing::expect_ok(
-            fs::canonicalize("../../goml-dev/stage2/bin/goml"),
-            "driver",
-        ),
+        Result::Err(_) => match env::var_structured("GOML") {
+            Result::Ok(value) => value,
+            Result::Err(_) => "goml",
+        },
     };
+    // Resolve before changing the child directory, including relative GOML paths.
+    let driver = testing::expect_ok(
+        fs::canonicalize(testing::expect_ok(process::look_path_structured(driver), "driver lookup")),
+        "driver path",
+    );
     let source = testing::expect_ok(
         fs::read_file_structured("tests/data/diagnostics.jsonl"),
         "diagnostic fixtures",
