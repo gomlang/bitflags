@@ -3,7 +3,7 @@
 Typed integer flag sets in GoML, modeled on
 [Rust bitflags 2.13.2](https://docs.rs/bitflags/2.13.2/bitflags/). The library is
 implemented entirely in GoML and uses ordinary third-party derive handlers.
-GoML 0.1.59 or newer is required.
+Use the [current GoML toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json) with unversioned registry support.
 Each flags type remains a distinct user-defined struct with its original integer
 storage; it is not a string-keyed map or a shared mutable handle.
 
@@ -26,9 +26,9 @@ fn example() -> Result[Permissions, bitflags::ParseError] {
 }
 ```
 
-The manifest dependency is `"ecosystem::bitflags" = "0.1.0"`. Repository
-verification supplies an isolated local registry; this coordinate is not a claim
-that the module has been published to a remote registry.
+The manifest dependency is `"ecosystem::bitflags" = true`. Repository
+verification supplies an isolated local registry. Unversioned dependencies track
+the package repository’s default branch.
 
 ## Declarations
 
@@ -171,7 +171,7 @@ metadata. The derive enforces these conditions and emits constant mask methods.
 (cd ../verification && just ecosystem-test bitflags)
 ```
 
-This runs public API tests, the example and its independent downstream verification, fresh/cached build
+This runs public API tests, the example, fresh/cached build
 checks, Rust reference comparisons, and compile-time diagnostic checks. Tests
 cover all 65,536 pairs of 8-bit operands, iterator reconstruction, aliases,
 overlaps, empty and unnamed definitions, signed/full-width storage, Unicode
@@ -186,12 +186,12 @@ projects, checking both nonzero exits and precise diagnostic text.
 
 ## Development and examples
 
-Requires GoML 0.1.59 or newer. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires the [current GoML toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json) with unversioned registry support. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test
-goml verify --timeout 300s
+(cd ../verification && just ecosystem-test bitflags)
 ```
 
-`goml test` builds the example and runs its tests. `goml verify` repeats the example checks as an independent module against an isolated registry snapshot. `(cd ../verification && just ecosystem-test bitflags)` also retains the library-specific smoke and compatibility checks.
+`goml test` builds the example and runs its tests. `(cd ../verification && just ecosystem-test bitflags)` runs the library-specific smoke and compatibility checks.
