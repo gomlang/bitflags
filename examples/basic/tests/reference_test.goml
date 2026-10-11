@@ -1,6 +1,6 @@
 package tests;
 
-use ecosystem::verification::reference;
+use ecosystem::testkit::reference;
 use ecosystem::bitflags::examples::basic as app;
 use std::fs;
 use std::json;
@@ -8,7 +8,7 @@ use std::testing;
 
 #[test]
 fn rust_bitflags_reference_profiles() -> () {
-    let data = reference::load_text("tests/data/reference.jsonl");
+    let data = reference::load_text(fixture_path("tests/data/reference.jsonl"));
     let mut count = 0;
     for line in data.split("\n") {
         if line == "" {
@@ -27,4 +27,12 @@ fn rust_bitflags_reference_profiles() -> () {
         count += 1;
     }
     testing::assert_eq(count, 4601);
+}
+
+fn fixture_path(path: string) -> string {
+    if fs::is_dir("examples/basic") {
+        "examples/basic/" + path
+    } else {
+        path
+    }
 }

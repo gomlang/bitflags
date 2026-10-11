@@ -3,7 +3,7 @@
 Typed integer flag sets in GoML, modeled on
 [Rust bitflags 2.13.2](https://docs.rs/bitflags/2.13.2/bitflags/). The library is
 implemented entirely in GoML and uses ordinary third-party derive handlers.
-Use the [current GoML toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json) with unversioned registry support.
+Use the [current GoML toolchain](https://github.com/gomlang/workflows/blob/main/ci/toolchain.json) with unversioned registry support.
 Each flags type remains a distinct user-defined struct with its original integer
 storage; it is not a string-keyed map or a shared mutable handle.
 
@@ -168,7 +168,7 @@ metadata. The derive enforces these conditions and emits constant mask methods.
 ## Verification
 
 ```sh
-(cd ../verification && just ecosystem-test bitflags)
+(cd ../workflows && just ecosystem-test bitflags)
 ```
 
 This runs public API tests, the example, fresh/cached build
@@ -186,12 +186,12 @@ projects, checking both nonzero exits and precise diagnostic text.
 
 ## Development and examples
 
-Requires the [current GoML toolchain](https://github.com/gomlang/verification/blob/main/ci/toolchain.json) with unversioned registry support. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
+Requires the [current GoML toolchain](https://github.com/gomlang/workflows/blob/main/ci/toolchain.json) with unversioned registry support. The `examples/basic/` example shares the root manifest; test-only helpers are declared in `[dev-dependencies]`. From the library root, run:
 
 ```sh
 goml run --example basic
 goml test --timeout 300s
-(cd ../verification && just ecosystem-test bitflags)
+(cd ../workflows && just ecosystem-test bitflags)
 ```
 
-`goml test --timeout 300s` builds the example and runs its tests. `(cd ../verification && just ecosystem-test bitflags)` runs the library-specific smoke and compatibility checks.
+`goml test --timeout 300s` builds the example and runs its tests. `(cd ../workflows && just ecosystem-test bitflags)` runs the library-specific smoke and compatibility checks.
